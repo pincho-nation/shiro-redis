@@ -1,5 +1,8 @@
 package org.crazycake.shiro;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
@@ -8,9 +11,6 @@ import org.crazycake.shiro.serializer.RedisSerializer;
 import org.crazycake.shiro.serializer.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public class RedisCacheManager implements CacheManager {
 
@@ -43,7 +43,8 @@ public class RedisCacheManager implements CacheManager {
 		Cache<K, V> cache = caches.get(name);
 
 		if (cache == null) {
-			cache = new RedisCache<K, V>(redisManager, keySerializer, valueSerializer, keyPrefix + name + ":", expire, principalIdFieldName);
+			cache = new RedisCache<K, V>(redisManager, keySerializer, valueSerializer, keyPrefix + name + ":", expire,
+					principalIdFieldName);
 			caches.put(name, cache);
 		}
 		return cache;

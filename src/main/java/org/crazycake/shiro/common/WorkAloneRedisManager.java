@@ -1,19 +1,15 @@
 package org.crazycake.shiro.common;
 
-import io.valkey.Jedis;
-import io.valkey.JedisPoolConfig;
-import io.valkey.exceptions.JedisConnectionException;
-import org.apache.shiro.cache.CacheException;
-import org.crazycake.shiro.IRedisManager;
-import org.crazycake.shiro.exception.PoolException;
-import io.valkey.params.ScanParams;
-import io.valkey.resps.ScanResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.crazycake.shiro.IRedisManager;
+
+import io.valkey.Jedis;
+import io.valkey.JedisPoolConfig;
+import io.valkey.params.ScanParams;
+import io.valkey.resps.ScanResult;
 
 /**
  * Abstract class of RedisManager.
@@ -56,11 +52,8 @@ public abstract class WorkAloneRedisManager implements IRedisManager {
             return null;
         }
         byte[] value;
-        Jedis jedis = getJedis();
-        try {
+        try (Jedis jedis = getJedis()) {
             value = jedis.get(key);
-        } finally {
-            jedis.close();
         }
         return value;
     }
@@ -78,15 +71,12 @@ public abstract class WorkAloneRedisManager implements IRedisManager {
         if (key == null) {
             return null;
         }
-        Jedis jedis = getJedis();
-        try {
+        try (Jedis jedis = getJedis()) {
             jedis.set(key, value);
             // -1 and 0 is not a valid expire time in Jedis
             if (expireTime > 0) {
                 jedis.expire(key, expireTime);
             }
-        } finally {
-            jedis.close();
         }
         return value;
     }
@@ -101,11 +91,8 @@ public abstract class WorkAloneRedisManager implements IRedisManager {
         if (key == null) {
             return;
         }
-        Jedis jedis = getJedis();
-        try {
+        try (Jedis jedis = getJedis()) {
             jedis.del(key);
-        } finally {
-            jedis.close();
         }
     }
 
@@ -118,8 +105,7 @@ public abstract class WorkAloneRedisManager implements IRedisManager {
     @Override
     public Long dbSize(byte[] pattern) {
         long dbSize = 0L;
-        Jedis jedis = getJedis();
-        try {
+        try (Jedis jedis = getJedis()) {
             ScanParams params = new ScanParams();
             params.count(count);
             params.match(pattern);
@@ -131,8 +117,6 @@ public abstract class WorkAloneRedisManager implements IRedisManager {
                 dbSize += results.size();
                 cursor = scanResult.getCursorAsBytes();
             } while (scanResult.getCursor().compareTo(ScanParams.SCAN_POINTER_START) > 0);
-        } finally {
-            jedis.close();
         }
         return dbSize;
     }
@@ -146,9 +130,7 @@ public abstract class WorkAloneRedisManager implements IRedisManager {
     @Override
     public Set<byte[]> keys(byte[] pattern) {
         Set<byte[]> keys = new HashSet<byte[]>();
-        Jedis jedis = getJedis();
-
-        try {
+        try (Jedis jedis = getJedis()) {
             ScanParams params = new ScanParams();
             params.count(count);
             params.match(pattern);
@@ -159,8 +141,6 @@ public abstract class WorkAloneRedisManager implements IRedisManager {
                 keys.addAll(scanResult.getResult());
                 cursor = scanResult.getCursorAsBytes();
             } while (scanResult.getCursor().compareTo(ScanParams.SCAN_POINTER_START) > 0);
-        } finally {
-            jedis.close();
         }
         return keys;
 

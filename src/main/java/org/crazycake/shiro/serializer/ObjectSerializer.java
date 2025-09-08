@@ -29,7 +29,7 @@ public class ObjectSerializer implements RedisSerializer<Object> {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteStream);
             objectOutputStream.writeObject(object);
             objectOutputStream.flush();
-            result =  byteStream.toByteArray();
+            result = byteStream.toByteArray();
         } catch (IOException e) {
             throw new SerializationException("serialize error, object=" + object, e);
         }

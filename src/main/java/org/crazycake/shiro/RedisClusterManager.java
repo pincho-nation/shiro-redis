@@ -1,15 +1,21 @@
 package org.crazycake.shiro;
 
-import io.valkey.*;
-import io.valkey.params.ScanParams;
-import io.valkey.resps.ScanResult;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-
-import java.time.Duration;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+
+import io.valkey.Connection;
+import io.valkey.ConnectionPool;
+import io.valkey.HostAndPort;
+import io.valkey.Jedis;
+import io.valkey.JedisCluster;
+import io.valkey.JedisPool;
+import io.valkey.JedisPoolConfig;
+import io.valkey.Protocol;
+import io.valkey.params.ScanParams;
+import io.valkey.resps.ScanResult;
 
 public class RedisClusterManager implements IRedisManager {
 
@@ -155,9 +161,7 @@ public class RedisClusterManager implements IRedisManager {
 
     private Set<byte[]> getKeysFromClusterNode(JedisPool jedisPool, byte[] pattern) {
         Set<byte[]> keys = new HashSet<byte[]>();
-        Jedis jedis = jedisPool.getResource();
-
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             ScanParams params = new ScanParams();
             params.count(count);
             params.match(pattern);
@@ -168,17 +172,13 @@ public class RedisClusterManager implements IRedisManager {
                 keys.addAll(scanResult.getResult());
                 cursor = scanResult.getCursorAsBytes();
             } while (scanResult.getCursor().compareTo(ScanParams.SCAN_POINTER_START) > 0);
-        } finally {
-            jedis.close();
         }
         return keys;
     }
 
     private long getDbSizeFromClusterNode(JedisPool jedisPool, byte[] pattern) {
         long dbSize = 0L;
-        Jedis jedis = jedisPool.getResource();
-
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             ScanParams params = new ScanParams();
             params.count(count);
             params.match(pattern);
@@ -189,8 +189,6 @@ public class RedisClusterManager implements IRedisManager {
                 dbSize++;
                 cursor = scanResult.getCursorAsBytes();
             } while (scanResult.getCursor().compareTo(ScanParams.SCAN_POINTER_START) > 0);
-        } finally {
-            jedis.close();
         }
         return dbSize;
     }

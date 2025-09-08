@@ -1,5 +1,14 @@
 package org.crazycake.shiro;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
@@ -10,9 +19,6 @@ import org.crazycake.shiro.serializer.RedisSerializer;
 import org.crazycake.shiro.serializer.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.Serializable;
-import java.util.*;
 
 /**
  * Used for setting/getting authentication information from Redis
@@ -26,7 +32,8 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
 	/**
 	 * doReadSession be called about 10 times when login.
-	 * Save Session in ThreadLocal to resolve this problem. sessionInMemoryTimeout is expiration of Session in ThreadLocal.
+	 * Save Session in ThreadLocal to resolve this problem. sessionInMemoryTimeout
+	 * is expiration of Session in ThreadLocal.
 	 * The default value is 1000 milliseconds (1s).
 	 * Most of time, you don't need to change it.
 	 *
@@ -43,7 +50,8 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 	/**
 	 * expire time in seconds.
 	 * NOTE: Please make sure expire is longer than session.getTimeout(),
-	 * otherwise you might need the issue that session in Redis got erased when the Session is still available
+	 * otherwise you might need the issue that session in Redis got erased when the
+	 * Session is still available
 	 *
 	 * DEFAULT_EXPIRE: use the timeout of session instead of setting it by yourself
 	 * NO_EXPIRE: never expire
@@ -71,6 +79,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
 	/**
 	 * save/update session
+	 * 
 	 * @param session
 	 * @throws UnknownSessionException
 	 */
@@ -115,6 +124,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
 	/**
 	 * delete session
+	 * 
 	 * @param session
 	 */
 	@Override
@@ -138,6 +148,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
 	/**
 	 * get all active sessions
+	 * 
 	 * @return
 	 */
 	@Override
@@ -149,12 +160,12 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 		try {
 			Set<byte[]> keys = redisManager.keys(keySerializer.serialize(this.keyPrefix + "*"));
 			if (keys != null && keys.size() > 0) {
-				for (byte[] key:keys) {
-                    Object deserialize = valueSerializer.deserialize(redisManager.get(key));
-                    if (deserialize == null) {
-                        continue;
-                    }
-                    sessions.add((Session) deserialize);
+				for (byte[] key : keys) {
+					Object deserialize = valueSerializer.deserialize(redisManager.get(key));
+					if (deserialize == null) {
+						continue;
+					}
+					sessions.add((Session) deserialize);
 				}
 			}
 		} catch (SerializationException e) {
@@ -173,13 +184,14 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 			throw new UnknownSessionException("session is null");
 		}
 		Serializable sessionId = this.generateSessionId(session);
-        this.assignSessionId(session, sessionId);
-        this.saveSession(session);
+		this.assignSessionId(session, sessionId);
+		this.saveSession(session);
 		return sessionId;
 	}
 
 	/**
 	 * I change
+	 * 
 	 * @param sessionId
 	 * @return
 	 */

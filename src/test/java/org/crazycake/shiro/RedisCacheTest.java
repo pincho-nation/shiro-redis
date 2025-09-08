@@ -1,5 +1,15 @@
 package org.crazycake.shiro;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.shiro.subject.PrincipalCollection;
 import org.crazycake.shiro.exception.SerializationException;
 import org.crazycake.shiro.serializer.ObjectSerializer;
@@ -7,15 +17,6 @@ import org.crazycake.shiro.serializer.StringSerializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.mockito.Mockito.*;
 
 public class RedisCacheTest {
     private IRedisManager redisManager;
@@ -28,14 +29,18 @@ public class RedisCacheTest {
     }
 
     private RedisCache mountRedisCache() {
-        return new RedisCache(redisManager, new StringSerializer(), new ObjectSerializer(), "employee:", 1, RedisCacheManager.DEFAULT_PRINCIPAL_ID_FIELD_NAME);
+        return new RedisCache(redisManager, new StringSerializer(), new ObjectSerializer(), "employee:", 1,
+                RedisCacheManager.DEFAULT_PRINCIPAL_ID_FIELD_NAME);
     }
 
     @Test
     public void testInitialize() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new RedisCache<String, String>(null, null, null, "abc:", 1, RedisCacheManager.DEFAULT_PRINCIPAL_ID_FIELD_NAME));
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new RedisCache<String, String>(new RedisManager(), null, null, "abc:", 1, RedisCacheManager.DEFAULT_PRINCIPAL_ID_FIELD_NAME));
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new RedisCache<String, String>(new RedisManager(), new StringSerializer(), null, "abc:", 1, RedisCacheManager.DEFAULT_PRINCIPAL_ID_FIELD_NAME));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new RedisCache<String, String>(null, null, null,
+                "abc:", 1, RedisCacheManager.DEFAULT_PRINCIPAL_ID_FIELD_NAME));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new RedisCache<String, String>(new RedisManager(),
+                null, null, "abc:", 1, RedisCacheManager.DEFAULT_PRINCIPAL_ID_FIELD_NAME));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new RedisCache<String, String>(new RedisManager(),
+                new StringSerializer(), null, "abc:", 1, RedisCacheManager.DEFAULT_PRINCIPAL_ID_FIELD_NAME));
     }
 
     @Test
@@ -48,7 +53,8 @@ public class RedisCacheTest {
         PrincipalCollection principal = new EmployeePrincipal(3);
         rc.put(principal, "account information");
 
-        verify(redisManager).set(keySerializer.serialize("employee:3"), valueSerializer.serialize("account information"), 1);
+        verify(redisManager).set(keySerializer.serialize("employee:3"),
+                valueSerializer.serialize("account information"), 1);
     }
 }
 

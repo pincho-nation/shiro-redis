@@ -1,12 +1,10 @@
 package org.crazycake.shiro;
 
-import org.apache.shiro.session.InvalidSessionException;
-import org.apache.shiro.session.Session;
-import org.crazycake.shiro.exception.SerializationException;
-import org.crazycake.shiro.serializer.ObjectSerializer;
-import org.crazycake.shiro.serializer.StringSerializer;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -14,11 +12,13 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.*;
+import org.apache.shiro.session.InvalidSessionException;
+import org.apache.shiro.session.Session;
+import org.crazycake.shiro.exception.SerializationException;
+import org.crazycake.shiro.serializer.ObjectSerializer;
+import org.crazycake.shiro.serializer.StringSerializer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class RedisSessionDAOTest {
     private IRedisManager redisManager;
@@ -81,8 +81,10 @@ public class RedisSessionDAOTest {
 
         StudentSession mockSession1 = new StudentSession(1, 2000);
         StudentSession mockSession2 = new StudentSession(2, 2000);
-        when(redisManager.get(keySerializer.serialize("student:1"))).thenReturn(valueSerializer.serialize(mockSession1));
-        when(redisManager.get(keySerializer.serialize("student:2"))).thenReturn(valueSerializer.serialize(mockSession2));
+        when(redisManager.get(keySerializer.serialize("student:1")))
+                .thenReturn(valueSerializer.serialize(mockSession1));
+        when(redisManager.get(keySerializer.serialize("student:2")))
+                .thenReturn(valueSerializer.serialize(mockSession2));
 
         RedisSessionDAO sessionDAO = mountRedisSessionDAO(null);
         assertThat(sessionDAO.getActiveSessions().size(), is(2));

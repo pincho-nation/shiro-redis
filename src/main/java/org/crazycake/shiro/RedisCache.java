@@ -1,5 +1,14 @@
 package org.crazycake.shiro;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -13,12 +22,9 @@ import org.crazycake.shiro.serializer.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.*;
-
 /**
  * Used for setting/getting authorization information from Redis
+ * 
  * @param <K>
  * @param <V>
  */
@@ -35,37 +41,39 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
 	/**
 	 *
-	 * @param redisManager redisManager
-	 * @param keySerializer keySerializer
-	 * @param valueSerializer valueSerializer
-	 * @param prefix authorization prefix
-	 * @param expire expire
+	 * @param redisManager         redisManager
+	 * @param keySerializer        keySerializer
+	 * @param valueSerializer      valueSerializer
+	 * @param prefix               authorization prefix
+	 * @param expire               expire
 	 * @param principalIdFieldName id field name of principal object
 	 */
-	public RedisCache(IRedisManager redisManager, RedisSerializer keySerializer, RedisSerializer valueSerializer, String prefix, int expire, String principalIdFieldName) {
-		 if (redisManager == null) {
-	         throw new IllegalArgumentException("redisManager cannot be null.");
-	     }
-	     this.redisManager = redisManager;
-		 if (keySerializer == null) {
-			 throw new IllegalArgumentException("keySerializer cannot be null.");
-		 }
-		 this.keySerializer = keySerializer;
+	public RedisCache(IRedisManager redisManager, RedisSerializer keySerializer, RedisSerializer valueSerializer,
+			String prefix, int expire, String principalIdFieldName) {
+		if (redisManager == null) {
+			throw new IllegalArgumentException("redisManager cannot be null.");
+		}
+		this.redisManager = redisManager;
+		if (keySerializer == null) {
+			throw new IllegalArgumentException("keySerializer cannot be null.");
+		}
+		this.keySerializer = keySerializer;
 		if (valueSerializer == null) {
 			throw new IllegalArgumentException("valueSerializer cannot be null.");
 		}
-		 this.valueSerializer = valueSerializer;
-		 if (prefix != null && !"".equals(prefix)) {
-			 this.keyPrefix = prefix;
-		 }
-         this.expire = expire;
-		 if (principalIdFieldName != null) {
-			 this.principalIdFieldName = principalIdFieldName;
-		 }
+		this.valueSerializer = valueSerializer;
+		if (prefix != null && !"".equals(prefix)) {
+			this.keyPrefix = prefix;
+		}
+		this.expire = expire;
+		if (principalIdFieldName != null) {
+			this.principalIdFieldName = principalIdFieldName;
+		}
 	}
 
 	/**
 	 * get shiro authorization redis key-value
+	 * 
 	 * @param key key
 	 * @return value
 	 * @throws CacheException get cache exception
@@ -100,7 +108,8 @@ public class RedisCache<K, V> implements Cache<K, V> {
 		try {
 			Object redisCacheKey = getRedisCacheKey(key);
 			logger.debug("put key [" + redisCacheKey + "]");
-			redisManager.set(keySerializer.serialize(redisCacheKey), value != null ? valueSerializer.serialize(value) : null, expire);
+			redisManager.set(keySerializer.serialize(redisCacheKey),
+					value != null ? valueSerializer.serialize(value) : null, expire);
 			return value;
 		} catch (SerializationException e) {
 			throw new CacheException(e);
@@ -110,22 +119,23 @@ public class RedisCache<K, V> implements Cache<K, V> {
 	@Override
 	public V remove(K key) throws CacheException {
 		logger.debug("remove key [" + key + "]");
-        if (key == null) {
-            return null;
-        }
+		if (key == null) {
+			return null;
+		}
 		try {
-            Object redisCacheKey = getRedisCacheKey(key);
-            byte[] rawValue = redisManager.get(keySerializer.serialize(redisCacheKey));
-            V previous = (V) valueSerializer.deserialize(rawValue);
-            redisManager.del(keySerializer.serialize(redisCacheKey));
-            return previous;
-        } catch (SerializationException e) {
-            throw new CacheException(e);
-        }
+			Object redisCacheKey = getRedisCacheKey(key);
+			byte[] rawValue = redisManager.get(keySerializer.serialize(redisCacheKey));
+			V previous = (V) valueSerializer.deserialize(rawValue);
+			redisManager.del(keySerializer.serialize(redisCacheKey));
+			return previous;
+		} catch (SerializationException e) {
+			throw new CacheException(e);
+		}
 	}
 
 	/**
 	 * get the full Redis key including prefix by Redis key
+	 * 
 	 * @param key
 	 * @return
 	 */
@@ -141,6 +151,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
 	/**
 	 * get Redis key (not including prefix)
+	 * 
 	 * @param key
 	 * @return
 	 */
@@ -148,7 +159,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 		String redisKey;
 		if (key instanceof PrincipalCollection) {
 			redisKey = getRedisKeyFromPrincipalIdField((PrincipalCollection) key);
-        } else {
+		} else {
 			redisKey = key.toString();
 		}
 		return redisKey;
@@ -156,13 +167,14 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
 	/**
 	 * get the Redis key (not including prefix) by PrincipalCollection
+	 * 
 	 * @param key
 	 * @return
 	 */
 	private String getRedisKeyFromPrincipalIdField(PrincipalCollection key) {
 		Object principalObject = key.getPrimaryPrincipal();
 		if (principalObject instanceof String) {
-		    return principalObject.toString();
+			return principalObject.toString();
 		}
 		Method pincipalIdGetter = getPrincipalIdGetter(principalObject);
 		return getIdObj(principalObject, pincipalIdGetter);
@@ -171,10 +183,10 @@ public class RedisCache<K, V> implements Cache<K, V> {
 	private String getIdObj(Object principalObject, Method pincipalIdGetter) {
 		String redisKey;
 		try {
-		    Object idObj = pincipalIdGetter.invoke(principalObject);
-		    if (idObj == null) {
-		        throw new PrincipalIdNullException(principalObject.getClass(), this.principalIdFieldName);
-            }
+			Object idObj = pincipalIdGetter.invoke(principalObject);
+			if (idObj == null) {
+				throw new PrincipalIdNullException(principalObject.getClass(), this.principalIdFieldName);
+			}
 			redisKey = idObj.toString();
 		} catch (IllegalAccessException e) {
 			throw new PrincipalInstanceException(principalObject.getClass(), this.principalIdFieldName, e);
@@ -202,26 +214,26 @@ public class RedisCache<K, V> implements Cache<K, V> {
 		return "get" + this.principalIdFieldName.substring(0, 1).toUpperCase() + this.principalIdFieldName.substring(1);
 	}
 
-
 	@Override
 	public void clear() throws CacheException {
 		logger.debug("clear cache");
-        Set<byte[]> keys = null;
-        try {
-            keys = redisManager.keys(keySerializer.serialize(this.keyPrefix + "*"));
-        } catch (SerializationException e) {
-            logger.error("get keys error", e);
-        }
-        if (keys == null || keys.size() == 0) {
-            return;
-        }
-        for (byte[] key: keys) {
-            redisManager.del(key);
-        }
+		Set<byte[]> keys = null;
+		try {
+			keys = redisManager.keys(keySerializer.serialize(this.keyPrefix + "*"));
+		} catch (SerializationException e) {
+			logger.error("get keys error", e);
+		}
+		if (keys == null || keys.size() == 0) {
+			return;
+		}
+		for (byte[] key : keys) {
+			redisManager.del(key);
+		}
 	}
 
 	/**
 	 * get all authorization key-value quantity
+	 * 
 	 * @return key-value size
 	 */
 	@Override
@@ -251,7 +263,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 		}
 
 		Set<K> convertedKeys = new HashSet<K>();
-		for (byte[] key:keys) {
+		for (byte[] key : keys) {
 			try {
 				convertedKeys.add((K) keySerializer.deserialize(key));
 			} catch (SerializationException e) {

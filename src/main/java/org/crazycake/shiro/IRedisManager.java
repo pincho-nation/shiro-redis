@@ -11,6 +11,7 @@ public interface IRedisManager {
 
     /**
      * get value from redis
+     * 
      * @param key key
      * @return value
      */
@@ -18,8 +19,9 @@ public interface IRedisManager {
 
     /**
      * set value
-     * @param key  key
-     * @param value value
+     * 
+     * @param key    key
+     * @param value  value
      * @param expire expire
      * @return value
      */
@@ -27,12 +29,14 @@ public interface IRedisManager {
 
     /**
      * del
+     * 
      * @param key key
      */
     void del(byte[] key);
 
     /**
      * dbsize
+     * 
      * @param pattern pattern
      * @return key-value size
      */
@@ -40,6 +44,7 @@ public interface IRedisManager {
 
     /**
      * keys
+     * 
      * @param pattern key pattern
      * @return key set
      */
