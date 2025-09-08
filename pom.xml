@@ -4,7 +4,7 @@
 
 	<groupId>org.crazycake</groupId>
 	<artifactId>shiro-redis</artifactId>
-	<version>3.3.2-valkey-5.3.0</version>
+	<version>4.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>shiro-redis</name>
