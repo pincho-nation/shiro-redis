@@ -4,3 +4,5 @@
 target
 .idea
 shiro-redis.iml
+.vscode
+.DS_Store
