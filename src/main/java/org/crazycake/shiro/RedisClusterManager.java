@@ -1,7 +1,11 @@
 package org.crazycake.shiro;
 
-import redis.clients.jedis.*;
+import io.valkey.*;
+import io.valkey.params.ScanParams;
+import io.valkey.resps.ScanResult;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -14,7 +18,8 @@ public class RedisClusterManager implements IRedisManager {
     private static final String DEFAULT_HOST = "127.0.0.1:7000,127.0.0.1:7001,127.0.0.1:7002";
     private String host = DEFAULT_HOST;
 
-    // timeout for jedis try to connect to redis server, not expire time! In milliseconds
+    // timeout for jedis try to connect to redis server, not expire time! In
+    // milliseconds
     private int timeout = Protocol.DEFAULT_TIMEOUT;
 
     // timeout for jedis try to read data from redis server
@@ -39,7 +44,28 @@ public class RedisClusterManager implements IRedisManager {
         if (jedisCluster == null) {
             synchronized (RedisClusterManager.class) {
                 if (jedisCluster == null) {
-                    jedisCluster = new JedisCluster(getHostAndPortSet(), timeout, soTimeout, maxAttempts, password, getJedisPoolConfig());
+                    GenericObjectPoolConfig<Connection> connectionPoolConfig = new GenericObjectPoolConfig<>();
+                    connectionPoolConfig.setMaxTotal(jedisPoolConfig.getMaxTotal());
+                    connectionPoolConfig.setMaxIdle(jedisPoolConfig.getMaxIdle());
+                    connectionPoolConfig.setMinIdle(jedisPoolConfig.getMinIdle());
+                    connectionPoolConfig.setLifo(jedisPoolConfig.getLifo());
+                    connectionPoolConfig.setFairness(jedisPoolConfig.getFairness());
+                    connectionPoolConfig.setMaxWait(jedisPoolConfig.getMaxWaitDuration());
+                    connectionPoolConfig.setMinEvictableIdleTime(jedisPoolConfig.getMinEvictableIdleDuration());
+                    connectionPoolConfig.setSoftMinEvictableIdleTime(jedisPoolConfig.getSoftMinEvictableIdleDuration());
+                    connectionPoolConfig.setNumTestsPerEvictionRun(jedisPoolConfig.getNumTestsPerEvictionRun());
+                    connectionPoolConfig.setEvictionPolicyClassName(jedisPoolConfig.getEvictionPolicyClassName());
+                    connectionPoolConfig.setTestOnCreate(jedisPoolConfig.getTestOnCreate());
+                    connectionPoolConfig.setTestOnBorrow(jedisPoolConfig.getTestOnBorrow());
+                    connectionPoolConfig.setTestOnReturn(jedisPoolConfig.getTestOnReturn());
+                    connectionPoolConfig.setTestWhileIdle(jedisPoolConfig.getTestWhileIdle());
+                    connectionPoolConfig.setTimeBetweenEvictionRuns(jedisPoolConfig.getTimeBetweenEvictionRuns());
+                    connectionPoolConfig.setBlockWhenExhausted(jedisPoolConfig.getBlockWhenExhausted());
+                    connectionPoolConfig.setJmxEnabled(jedisPoolConfig.getJmxEnabled());
+                    connectionPoolConfig.setJmxNamePrefix(jedisPoolConfig.getJmxNamePrefix());
+                    connectionPoolConfig.setJmxNameBase(jedisPoolConfig.getJmxNameBase());
+                    jedisCluster = new JedisCluster(getHostAndPortSet(), timeout, soTimeout, maxAttempts, password,
+                            connectionPoolConfig);
                 }
             }
         }
@@ -54,7 +80,6 @@ public class RedisClusterManager implements IRedisManager {
         }
         return hostAndPorts;
     }
-
 
     protected JedisCluster getJedisCluster() {
         if (jedisCluster == null) {
@@ -94,15 +119,17 @@ public class RedisClusterManager implements IRedisManager {
     @Override
     public Long dbSize(byte[] pattern) {
         long dbSize = 0L;
-        Map<String, JedisPool> clusterNodes = getJedisCluster().getClusterNodes();
-        Iterator<Map.Entry<String, JedisPool>> nodeIt = clusterNodes.entrySet().iterator();
-        while (nodeIt.hasNext()) {
-            Map.Entry<String, JedisPool> node = nodeIt.next();
-            long nodeDbSize = getDbSizeFromClusterNode(node.getValue(), pattern);
-            if (nodeDbSize == 0L) {
-                continue;
+        Map<String, ConnectionPool> clusterNodes = getJedisCluster().getClusterNodes();
+        for (Map.Entry<String, ConnectionPool> node : clusterNodes.entrySet()) {
+            String[] hostAndPort = node.getKey().split(":");
+            try (JedisPool jedisPool = new JedisPool(getJedisPoolConfig(), hostAndPort[0],
+                    Integer.parseInt(hostAndPort[1]), timeout, password)) {
+                long nodeDbSize = getDbSizeFromClusterNode(jedisPool, pattern);
+                if (nodeDbSize == 0L) {
+                    continue;
+                }
+                dbSize += nodeDbSize;
             }
-            dbSize += nodeDbSize;
         }
         return dbSize;
     }
@@ -110,15 +137,17 @@ public class RedisClusterManager implements IRedisManager {
     @Override
     public Set<byte[]> keys(byte[] pattern) {
         Set<byte[]> keys = new HashSet<byte[]>();
-        Map<String, JedisPool> clusterNodes = getJedisCluster().getClusterNodes();
-        Iterator<Map.Entry<String, JedisPool>> nodeIt = clusterNodes.entrySet().iterator();
-        while (nodeIt.hasNext()) {
-            Map.Entry<String, JedisPool> node = nodeIt.next();
-            Set<byte[]> nodeKeys = getKeysFromClusterNode(node.getValue(), pattern);
-            if (nodeKeys.size() == 0) {
-                continue;
+        Map<String, ConnectionPool> clusterNodes = getJedisCluster().getClusterNodes();
+        for (Map.Entry<String, ConnectionPool> node : clusterNodes.entrySet()) {
+            String[] hostAndPort = node.getKey().split(":");
+            try (JedisPool jedisPool = new JedisPool(getJedisPoolConfig(), hostAndPort[0],
+                    Integer.parseInt(hostAndPort[1]), timeout, password)) {
+                Set<byte[]> nodeKeys = getKeysFromClusterNode(jedisPool, pattern);
+                if (nodeKeys.isEmpty()) {
+                    continue;
+                }
+                keys.addAll(nodeKeys);
             }
-            keys.addAll(nodeKeys);
         }
 
         return keys;

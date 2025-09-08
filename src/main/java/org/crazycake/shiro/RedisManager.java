@@ -1,16 +1,18 @@
 package org.crazycake.shiro;
 
 import org.crazycake.shiro.common.WorkAloneRedisManager;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.Protocol;
+
+import io.valkey.Jedis;
+import io.valkey.JedisPool;
+import io.valkey.Protocol;
 
 public class RedisManager extends WorkAloneRedisManager implements IRedisManager {
 
 	private static final String DEFAULT_HOST = "127.0.0.1:6379";
 	private String host = DEFAULT_HOST;
 
-	// timeout for jedis try to connect to redis server, not expire time! In milliseconds
+	// timeout for jedis try to connect to redis server, not expire time! In
+	// milliseconds
 	private int timeout = Protocol.DEFAULT_TIMEOUT;
 
 	private String password;
@@ -24,7 +26,8 @@ public class RedisManager extends WorkAloneRedisManager implements IRedisManager
 			synchronized (RedisManager.class) {
 				if (jedisPool == null) {
 					String[] hostAndPort = host.split(":");
-					jedisPool = new JedisPool(getJedisPoolConfig(), hostAndPort[0], Integer.parseInt(hostAndPort[1]), timeout, password, database);
+					jedisPool = new JedisPool(getJedisPoolConfig(), hostAndPort[0], Integer.parseInt(hostAndPort[1]),
+							timeout, password, database);
 				}
 			}
 		}

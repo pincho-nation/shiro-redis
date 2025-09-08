@@ -1,23 +1,32 @@
 package org.crazycake.shiro;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import redis.clients.jedis.JedisCluster;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import io.valkey.JedisCluster;
 
 public class RedisClusterManagerTest {
 
-    private RedisClusterManager redisClusterManager;
+    @Mock
     private JedisCluster jedisCluster;
+    @InjectMocks
+    private RedisClusterManager redisClusterManager;
 
     @BeforeEach
     public void setUp() {
-        jedisCluster = mock(JedisCluster.class);
-        redisClusterManager = new RedisClusterManager();
+        MockitoAnnotations.openMocks(this);
         redisClusterManager.setJedisCluster(jedisCluster);
     }
 
@@ -38,10 +47,10 @@ public class RedisClusterManagerTest {
         verify(jedisCluster, times(0)).set(any(byte[].class), any(byte[].class));
         redisClusterManager.set(new byte[0], new byte[0], -1);
         verify(jedisCluster, times(1)).set(any(byte[].class), any(byte[].class));
-        verify(jedisCluster, times(0)).expire(any(byte[].class), any(int.class));
+        verify(jedisCluster, times(0)).expire(any(byte[].class), anyLong());
         redisClusterManager.set(new byte[0], new byte[0], 0);
-        verify(jedisCluster, times(1)).expire(any(byte[].class), any(int.class));
+        verify(jedisCluster, times(1)).expire(any(byte[].class), anyLong());
         redisClusterManager.set(new byte[0], new byte[0], 1);
-        verify(jedisCluster, times(2)).expire(any(byte[].class), any(int.class));
+        verify(jedisCluster, times(2)).expire(any(byte[].class), anyLong());
     }
 }

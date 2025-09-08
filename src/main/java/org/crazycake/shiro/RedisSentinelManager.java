@@ -1,13 +1,14 @@
 package org.crazycake.shiro;
 
-import org.crazycake.shiro.common.WorkAloneRedisManager;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisSentinelPool;
-import redis.clients.jedis.Protocol;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.crazycake.shiro.common.WorkAloneRedisManager;
+
+import io.valkey.Jedis;
+import io.valkey.JedisSentinelPool;
+import io.valkey.Protocol;
 
 public class RedisSentinelManager extends WorkAloneRedisManager implements IRedisManager {
 
@@ -17,7 +18,8 @@ public class RedisSentinelManager extends WorkAloneRedisManager implements IRedi
 	private static final String DEFAULT_MASTER_NAME = "mymaster";
 	private String masterName = DEFAULT_MASTER_NAME;
 
-	// timeout for jedis try to connect to redis server, not expire time! In milliseconds
+	// timeout for jedis try to connect to redis server, not expire time! In
+	// milliseconds
 	private int timeout = Protocol.DEFAULT_TIMEOUT;
 
 	// timeout for jedis try to read data from redis server
@@ -44,7 +46,8 @@ public class RedisSentinelManager extends WorkAloneRedisManager implements IRedi
 					String[] sentinelHosts = host.split(",\\s*");
 					Set<String> sentinels = new HashSet<String>();
 					Collections.addAll(sentinels, sentinelHosts);
-					jedisPool = new JedisSentinelPool(masterName, sentinels, getJedisPoolConfig(), timeout, soTimeout, password, database);
+					jedisPool = new JedisSentinelPool(masterName, sentinels, getJedisPoolConfig(), timeout, soTimeout,
+							password, database);
 				}
 			}
 		}
