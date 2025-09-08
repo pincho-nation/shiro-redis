@@ -1,6 +1,17 @@
 package org.crazycake.shiro.integration.fixture;
 
-import com.github.javafaker.Faker;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -13,33 +24,24 @@ import org.crazycake.shiro.integration.fixture.model.FakeAuth;
 import org.crazycake.shiro.integration.fixture.model.FakeSession;
 import org.crazycake.shiro.integration.fixture.model.UserInfo;
 import org.crazycake.shiro.serializer.RedisSerializer;
-import redis.clients.jedis.Jedis;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import com.github.javafaker.Faker;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.StringContains.containsString;
+import io.valkey.Jedis;
 
 public class TestFixture {
 
     private static Properties properties = loadProperties("shiro-standalone.ini");
     private static Faker faker = new Faker();
 
-    //  /$$       /$$                       /$$
-    // | $$      | $$                      | $$
-    // | $$$$$$$ | $$  /$$$$$$   /$$$$$$$ /$$$$$$
-    // | $$__  $$| $$ |____  $$ /$$_____/|_  $$_/
-    // | $$  \ $$| $$  /$$$$$$$|  $$$$$$   | $$
-    // | $$  | $$| $$ /$$__  $$ \____  $$  | $$ /$$
-    // | $$$$$$$/| $$|  $$$$$$$ /$$$$$$$/  |  $$$$/
-    // |_______/ |__/ \_______/|_______/    \___/
-
+    // /$$ /$$ /$$
+    // | $$ | $$ | $$
+    // | $$$$$$$ | $$ /$$$$$$ /$$$$$$$ /$$$$$$
+    // | $$__ $$| $$ |____ $$ /$$_____/|_ $$_/
+    // | $$ \ $$| $$ /$$$$$$$| $$$$$$ | $$
+    // | $$ | $$| $$ /$$__ $$ \____ $$ | $$ /$$
+    // | $$$$$$$/| $$| $$$$$$$ /$$$$$$$/ | $$$$/
+    // |_______/ |__/ \_______/|_______/ \___/
 
     public static void blastRedis() {
         Jedis jedis = doGetRedisInstance();
@@ -47,16 +49,17 @@ public class TestFixture {
         jedis.close();
     }
 
-    //                                /$$$$$$   /$$$$$$          /$$       /$$
-    //                               /$$__  $$ /$$__  $$        | $$      | $$
-    //  /$$$$$$$  /$$$$$$$  /$$$$$$ | $$  \__/| $$  \__//$$$$$$ | $$  /$$$$$$$
-    // /$$_____/ /$$_____/ |____  $$| $$$$    | $$$$   /$$__  $$| $$ /$$__  $$
-    //|  $$$$$$ | $$        /$$$$$$$| $$_/    | $$_/  | $$  \ $$| $$| $$  | $$
-    // \____  $$| $$       /$$__  $$| $$      | $$    | $$  | $$| $$| $$  | $$
-    // /$$$$$$$/|  $$$$$$$|  $$$$$$$| $$      | $$    |  $$$$$$/| $$|  $$$$$$$
-    //|_______/  \_______/ \_______/|__/      |__/     \______/ |__/ \_______/
+    // /$$$$$$ /$$$$$$ /$$ /$$
+    // /$$__ $$ /$$__ $$ | $$ | $$
+    // /$$$$$$$ /$$$$$$$ /$$$$$$ | $$ \__/| $$ \__//$$$$$$ | $$ /$$$$$$$
+    // /$$_____/ /$$_____/ |____ $$| $$$$ | $$$$ /$$__ $$| $$ /$$__ $$
+    // | $$$$$$ | $$ /$$$$$$$| $$_/ | $$_/ | $$ \ $$| $$| $$ | $$
+    // \____ $$| $$ /$$__ $$| $$ | $$ | $$ | $$| $$| $$ | $$
+    // /$$$$$$$/| $$$$$$$| $$$$$$$| $$ | $$ | $$$$$$/| $$| $$$$$$$
+    // |_______/ \_______/ \_______/|__/ |__/ \______/ |__/ \_______/
 
-    public static <K, V> RedisCache scaffoldRedisCache(RedisManager redisManager, RedisSerializer<K> keySerializer, RedisSerializer<V> valueSerializer, String prefix, int expire, String principalIdFieldName) {
+    public static <K, V> RedisCache scaffoldRedisCache(RedisManager redisManager, RedisSerializer<K> keySerializer,
+            RedisSerializer<V> valueSerializer, String prefix, int expire, String principalIdFieldName) {
         return new RedisCache<K, V>(redisManager, keySerializer, valueSerializer, prefix, expire, principalIdFieldName);
     }
 
@@ -80,7 +83,7 @@ public class TestFixture {
 
     public static UserInfo scaffoldUser() {
         UserInfo user = new UserInfo();
-        user.setId(faker.number().randomDigitNotZero());
+        user.setId((int) faker.number().randomNumber(8, true));
         user.setUsername(faker.name().username());
         user.setAge(faker.number().numberBetween(18, 60));
         user.setRole(faker.number().randomDigitNotZero());
@@ -88,7 +91,7 @@ public class TestFixture {
     }
 
     public static FakeSession scaffoldSession() {
-        return new FakeSession(faker.number().randomDigitNotZero(), faker.name().username());
+        return new FakeSession((int) faker.number().randomNumber(8, true), faker.name().username());
     }
 
     public static FakeSession scaffoldEmptySession() {
@@ -113,21 +116,21 @@ public class TestFixture {
         return keys;
     }
 
-    //                         /$$     /$$
-    //                        | $$    |__/
-    //    /$$$$$$   /$$$$$$$ /$$$$$$   /$$  /$$$$$$  /$$$$$$$   /$$$$$$$
-    //   |____  $$ /$$_____/|_  $$_/  | $$ /$$__  $$| $$__  $$ /$$_____/
-    //    /$$$$$$$| $$        | $$    | $$| $$  \ $$| $$  \ $$|  $$$$$$
-    //   /$$__  $$| $$        | $$ /$$| $$| $$  | $$| $$  | $$ \____  $$
-    //  |  $$$$$$$|  $$$$$$$  |  $$$$/| $$|  $$$$$$/| $$  | $$ /$$$$$$$/
-    //   \_______/ \_______/   \___/  |__/ \______/ |__/  |__/|_______/
+    // /$$ /$$
+    // | $$ |__/
+    // /$$$$$$ /$$$$$$$ /$$$$$$ /$$ /$$$$$$ /$$$$$$$ /$$$$$$$
+    // |____ $$ /$$_____/|_ $$_/ | $$ /$$__ $$| $$__ $$ /$$_____/
+    // /$$$$$$$| $$ | $$ | $$| $$ \ $$| $$ \ $$| $$$$$$
+    // /$$__ $$| $$ | $$ /$$| $$| $$ | $$| $$ | $$ \____ $$
+    // | $$$$$$$| $$$$$$$ | $$$$/| $$| $$$$$$/| $$ | $$ /$$$$$$$/
+    // \_______/ \_______/ \___/ |__/ \______/ |__/ |__/|_______/
 
     public static void doPutAuth(RedisCache redisCache, PrincipalCollection user) {
         if (user == null) {
             redisCache.put(null, null);
             return;
         }
-        redisCache.put(user, turnUserToFakeAuth((UserInfo)user.getPrimaryPrincipal()));
+        redisCache.put(user, turnUserToFakeAuth((UserInfo) user.getPrimaryPrincipal()));
     }
 
     public static void doRemoveAuth(RedisCache redisCache, PrincipalCollection user) {
@@ -151,21 +154,22 @@ public class TestFixture {
     }
 
     private static Jedis doGetRedisInstance() {
-        return new Jedis(properties.getProperty("redisManager.host").split(":")[0]);
+        String[] hostAndPort = properties.getProperty("redisManager.host").split(":");
+        return new Jedis(hostAndPort[0], Integer.parseInt(hostAndPort[1]));
     }
 
-    //                                                      /$$
-    //                                                     | $$
-    //    /$$$$$$   /$$$$$$$ /$$$$$$$  /$$$$$$   /$$$$$$  /$$$$$$
-    //   |____  $$ /$$_____//$$_____/ /$$__  $$ /$$__  $$|_  $$_/
-    //    /$$$$$$$|  $$$$$$|  $$$$$$ | $$$$$$$$| $$  \__/  | $$
-    //   /$$__  $$ \____  $$\____  $$| $$_____/| $$        | $$ /$$
-    //  |  $$$$$$$ /$$$$$$$//$$$$$$$/|  $$$$$$$| $$        |  $$$$/
-    //   \_______/|_______/|_______/  \_______/|__/         \___/
+    // /$$
+    // | $$
+    // /$$$$$$ /$$$$$$$ /$$$$$$$ /$$$$$$ /$$$$$$ /$$$$$$
+    // |____ $$ /$$_____//$$_____/ /$$__ $$ /$$__ $$|_ $$_/
+    // /$$$$$$$| $$$$$$| $$$$$$ | $$$$$$$$| $$ \__/ | $$
+    // /$$__ $$ \____ $$\____ $$| $$_____/| $$ | $$ /$$
+    // | $$$$$$$ /$$$$$$$//$$$$$$$/| $$$$$$$| $$ | $$$$/
+    // \_______/|_______/|_______/ \_______/|__/ \___/
 
     public static void assertRedisEmpty() {
         Jedis jedis = doGetRedisInstance();
-        assertThat("Redis should be empty",jedis.dbSize(), is(0L));
+        assertThat("Redis should be empty", jedis.dbSize(), is(0L));
     }
 
     public static void assertKeysEquals(Set actualKeys, Set expectKeys) {
@@ -179,32 +183,33 @@ public class TestFixture {
 
     public static void assertPrincipalInstanceException(Exception e) {
         assertThat(e, is(notNullValue()));
-        assertThat(e.getMessage(), containsString("must has getter for field: " + properties.getProperty("cacheManager.principalIdFieldName")));
+        assertThat(e.getMessage(), containsString(
+                "must has getter for field: " + properties.getProperty("cacheManager.principalIdFieldName")));
     }
 
     public static void assertEquals(Object actual, Object expect) {
-        assertThat(actual,is(expect));
+        assertThat(actual, is(expect));
     }
 
     public static void assertSessionEquals(Session actualSession, Session expectSession) {
         assertThat(actualSession.getId(), is(expectSession.getId()));
-        assertThat(((FakeSession)actualSession).getName(), is(((FakeSession)expectSession).getName()));
+        assertThat(((FakeSession) actualSession).getName(), is(((FakeSession) expectSession).getName()));
     }
 
-    //     /$$                                             /$$$$$$
-    //    | $$                                            /$$__  $$
-    //   /$$$$$$    /$$$$$$  /$$$$$$  /$$$$$$$   /$$$$$$$| $$  \__//$$$$$$   /$$$$$$
-    //  |_  $$_/   /$$__  $$|____  $$| $$__  $$ /$$_____/| $$$$   /$$__  $$ /$$__  $$
-    //    | $$    | $$  \__/ /$$$$$$$| $$  \ $$|  $$$$$$ | $$_/  | $$$$$$$$| $$  \__/
-    //    | $$ /$$| $$      /$$__  $$| $$  | $$ \____  $$| $$    | $$_____/| $$
-    //    |  $$$$/| $$     |  $$$$$$$| $$  | $$ /$$$$$$$/| $$    |  $$$$$$$| $$
-    //     \___/  |__/      \_______/|__/  |__/|_______/ |__/     \_______/|__/
+    // /$$ /$$$$$$
+    // | $$ /$$__ $$
+    // /$$$$$$ /$$$$$$ /$$$$$$ /$$$$$$$ /$$$$$$$| $$ \__//$$$$$$ /$$$$$$
+    // |_ $$_/ /$$__ $$|____ $$| $$__ $$ /$$_____/| $$$$ /$$__ $$ /$$__ $$
+    // | $$ | $$ \__/ /$$$$$$$| $$ \ $$| $$$$$$ | $$_/ | $$$$$$$$| $$ \__/
+    // | $$ /$$| $$ /$$__ $$| $$ | $$ \____ $$| $$ | $$_____/| $$
+    // | $$$$/| $$ | $$$$$$$| $$ | $$ /$$$$$$$/| $$ | $$$$$$$| $$
+    // \___/ |__/ \_______/|__/ |__/|_______/ |__/ \_______/|__/
     //
 
     public static Set turnPrincipalCollectionToString(Set<PrincipalCollection> users, String prefix) {
         Set<String> keys = new HashSet<String>();
         for (PrincipalCollection user : users) {
-            keys.add(prefix + ((UserInfo)user.getPrimaryPrincipal()).getId());
+            keys.add(prefix + ((UserInfo) user.getPrimaryPrincipal()).getId());
         }
         return keys;
     }
@@ -216,27 +221,24 @@ public class TestFixture {
         return auth;
     }
 
-    //     /$$                         /$$
-    //    | $$                        | $$
-    //   /$$$$$$    /$$$$$$   /$$$$$$ | $$  /$$$$$$$
-    //  |_  $$_/   /$$__  $$ /$$__  $$| $$ /$$_____/
-    //    | $$    | $$  \ $$| $$  \ $$| $$|  $$$$$$
-    //    | $$ /$$| $$  | $$| $$  | $$| $$ \____  $$
-    //    |  $$$$/|  $$$$$$/|  $$$$$$/| $$ /$$$$$$$/
-    //     \___/   \______/  \______/ |__/|_______/
+    // /$$ /$$
+    // | $$ | $$
+    // /$$$$$$ /$$$$$$ /$$$$$$ | $$ /$$$$$$$
+    // |_ $$_/ /$$__ $$ /$$__ $$| $$ /$$_____/
+    // | $$ | $$ \ $$| $$ \ $$| $$| $$$$$$
+    // | $$ /$$| $$ | $$| $$ | $$| $$ \____ $$
+    // | $$$$/| $$$$$$/| $$$$$$/| $$ /$$$$$$$/
+    // \___/ \______/ \______/ |__/|_______/
 
     public static Properties loadProperties(String propFileName) {
 
         Properties props = new Properties();
-        InputStream inputStream = TestFixture.class.getClassLoader()
-                .getResourceAsStream(propFileName);
-
-        if (inputStream != null) {
-            try {
-                props.load(inputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream("src/integration-test/resources/" + propFileName);
+            props.load(inputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         return props;
