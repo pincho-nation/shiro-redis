@@ -2,17 +2,26 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.crazycake</groupId>
+	<groupId>com.github.pincho-nation</groupId>
 	<artifactId>shiro-redis</artifactId>
-	<version>4.0.0</version>
+	<version>4.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>shiro-redis</name>
 	<description>shiro only provide the support of ehcache and concurrentHashMap. Here is an implement of redis cache can be used by shiro. Hope it will help you!</description>
-	<url>https://github.com/alexxiyang/shiro-redis</url>
+	<url>https://github.com/pincho-nation/shiro-redis</url>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub PinchoNation Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/pincho-nation/shiro-redis</url>
+		</repository>
+	</distributionManagement>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
 	</properties>
 
 	<licenses>
@@ -97,16 +106,7 @@
 		<developerConnection>scm:git:https://github.com/alexxiyang/shiro-redis.git</developerConnection>
 		<url>https://github.com/alexxiyang/shiro-redis.git</url>
 	</scm>
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
+
 	<build>
 		<finalName>shiro-redis</finalName>
 		<plugins>
@@ -195,76 +195,4 @@
 		</plugins>
 	</build>
 
-	<profiles>
-		<profile>
-			<id>release-sign-artifacts</id>
-			<activation>
-				<property>
-					<name>release</name>
-					<value>true</value>
-				</property>
-			</activation>
-
-			<properties>
-				<gpg.keyname>D688E942</gpg.keyname>	<!-- GPG Key ID to use for signing -->
-				<release.username>alexxiyang</release.username>
-			</properties>
-
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.8</version>
-						<extensions>true</extensions>
-						<configuration>
-							<serverId>ossrh</serverId>
-							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-source-plugin</artifactId>
-						<version>3.2.1</version>
-						<executions>
-							<execution>
-								<id>attach-sources</id>
-								<goals>
-									<goal>jar-no-fork</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.2.0</version>
-						<executions>
-							<execution>
-								<id>attach-javadocs</id>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.6</version>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 </project>
