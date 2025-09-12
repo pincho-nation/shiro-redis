@@ -92,7 +92,7 @@
 
 	<developers>
 		<developer>
-				<id>alexxiyang</id>
+			<id>alexxiyang</id>
 			<name>Alex Yang</name>
 			<email>alexxiyang@gmail.com</email>
 			<timezone>GMT-7</timezone>
@@ -102,9 +102,9 @@
 		</developer>
 	</developers>
 	<scm>
-		<connection>scm:git:https://github.com/alexxiyang/shiro-redis.git</connection>
-		<developerConnection>scm:git:https://github.com/alexxiyang/shiro-redis.git</developerConnection>
-		<url>https://github.com/alexxiyang/shiro-redis.git</url>
+		<connection>scm:git:https://github.com/pincho-nation/shiro-redis.git</connection>
+		<developerConnection>scm:git:https://github.com/pincho-nation/shiro-redis.git</developerConnection>
+		<url>https://github.com/pincho-nation/shiro-redis.git</url>
 	</scm>
 
 	<build>
